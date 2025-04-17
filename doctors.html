@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctors - University Dispensary Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-hospital-user text-blue-600 text-2xl mr-2"></i>
+                        <span class="font-bold text-xl text-gray-800">UDMS</span>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="index.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Dashboard</a>
+                        <a href="patients.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Patients</a>
+                        <a href="doctors.html" class="border-b-2 border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Doctors</a>
+                        <a href="appointments.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Appointments</a>
+                        <a href="medicines.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Medicines</a>
+                        <a href="prescriptions.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Prescriptions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <h1 class="text-3xl font-bold text-gray-900">
+                Doctors Directory
+            </h1>
+        </div>
+    </div>
+
+    <!-- Doctors List -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Search bar -->
+        <div class="mb-6 px-4 sm:px-0">
+            <div class="relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="Search doctors...">
+            </div>
+        </div>
+
+        <!-- Grid of Doctor Cards -->
+        <div id="doctorsGrid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Doctor cards will be inserted here -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden text-center py-4">
+            <div class="text-red-500">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Error loading doctors data. Please try again later.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch and display doctors
+        async function fetchDoctors() {
+            const doctorsGrid = document.getElementById('doctorsGrid');
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+
+            try {
+                loadingState.style.display = 'block';
+                errorState.style.display = 'none';
+                
+                const response = await fetch('http://localhost:8000/api/doctors');
+                const doctors = await response.json();
+
+                loadingState.style.display = 'none';
+                
+                doctorsGrid.innerHTML = doctors.map(doctor => `
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                    <i class="fas fa-user-md text-white text-xl"></i>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                        ${doctor.doctor_name}
+                                    </h3>
+                                    <div class="mt-2 max-w-xl text-sm text-gray-500">
+                                        <p class="mt-1">
+                                            <i class="fas fa-stethoscope mr-2"></i>
+                                            ${doctor.doctor_speciality}
+                                        </p>
+                                        <p class="mt-1">
+                                            <i class="fas fa-venus-mars mr-2"></i>
+                                            ${doctor.doctor_gender}
+                                        </p>
+                                        <p class="mt-1">
+                                            <i class="fas fa-phone mr-2"></i>
+                                            ${doctor.doctor_number}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+                loadingState.style.display = 'none';
+                errorState.style.display = 'block';
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('#doctorsGrid > div');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        });
+
+        // Load doctors when page loads
+        fetchDoctors();
+    </script>
+</body>
+</html>

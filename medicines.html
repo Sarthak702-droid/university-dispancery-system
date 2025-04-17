@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicines - University Dispensary Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+        }
+        .stock-low {
+            color: #ef4444;
+        }
+        .stock-medium {
+            color: #f59e0b;
+        }
+        .stock-high {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-hospital-user text-blue-600 text-2xl mr-2"></i>
+                        <span class="font-bold text-xl text-gray-800">UDMS</span>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="index.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Dashboard</a>
+                        <a href="patients.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Patients</a>
+                        <a href="doctors.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Doctors</a>
+                        <a href="appointments.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Appointments</a>
+                        <a href="medicines.html" class="border-b-2 border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">Medicines</a>
+                        <a href="prescriptions.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Prescriptions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <h1 class="text-3xl font-bold text-gray-900">
+                Medicine Inventory
+            </h1>
+        </div>
+    </div>
+
+    <!-- Medicine Inventory -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Search and Filter -->
+        <div class="mb-6 px-4 sm:px-0">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="Search medicines...">
+                </div>
+                <div class="relative rounded-md shadow-sm">
+                    <select id="stockFilter" class="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                        <option value="all">All Stock Levels</option>
+                        <option value="low">Low Stock (≤ 30)</option>
+                        <option value="medium">Medium Stock (31-70)</option>
+                        <option value="high">High Stock (> 70)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medicine Grid -->
+        <div id="medicineGrid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Medicine cards will be inserted here -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden text-center py-4">
+            <div class="text-red-500">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Error loading medicine data. Please try again later.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to get stock level class
+        function getStockLevelClass(stock) {
+            if (stock <= 30) return 'stock-low';
+            if (stock <= 70) return 'stock-medium';
+            return 'stock-high';
+        }
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Function to fetch and display medicines
+        async function fetchMedicines() {
+            const medicineGrid = document.getElementById('medicineGrid');
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+
+            try {
+                loadingState.style.display = 'block';
+                errorState.style.display = 'none';
+                
+                const response = await fetch('http://localhost:8000/api/medicines');
+                const medicines = await response.json();
+
+                loadingState.style.display = 'none';
+                
+                medicineGrid.innerHTML = medicines.map(medicine => `
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-medium text-gray-900">
+                                        ${medicine.medicine_name}
+                                    </h3>
+                                    <div class="mt-1">
+                                        <p class="text-sm text-gray-500">ID: ${medicine.medicine_id}</p>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium ${getStockLevelClass(medicine.medicine_stock)}">
+                                        ${medicine.medicine_stock} units
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-4 border-t border-gray-200 pt-4">
+                                <div class="text-sm text-gray-500">
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar-plus mr-2"></i>
+                                        Manufactured: ${formatDate(medicine.manufacture_date)}
+                                    </p>
+                                    <p>
+                                        <i class="fas fa-calendar-times mr-2"></i>
+                                        Expires: ${formatDate(medicine.expiry_date)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+                loadingState.style.display = 'none';
+                errorState.style.display = 'block';
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('#medicineGrid > div');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        });
+
+        // Stock filter functionality
+        document.getElementById('stockFilter').addEventListener('change', function(e) {
+            const filterValue = e.target.value;
+            const cards = document.querySelectorAll('#medicineGrid > div');
+            
+            cards.forEach(card => {
+                const stockText = card.querySelector('.rounded-full').textContent;
+                const stock = parseInt(stockText);
+                
+                let show = true;
+                if (filterValue === 'low') show = stock <= 30;
+                else if (filterValue === 'medium') show = stock > 30 && stock <= 70;
+                else if (filterValue === 'high') show = stock > 70;
+                
+                card.style.display = show ? '' : 'none';
+            });
+        });
+
+        // Load medicines when page loads
+        fetchMedicines();
+    </script>
+</body>
+</html>
